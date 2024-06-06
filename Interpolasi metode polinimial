@@ -1,0 +1,86 @@
+# Banner program
+print("=== PROGRAM PENYELESAIAN PERSAMAAN LINIER ===")
+print("=== Muhammad Zein Al-kautsar Nugroho - 21120122140151 ===")
+print("==== MATA KULIAH METODE NUMERIK KELAS B ====")
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+#class interpolasi lagrange
+class InterpolasiLagrange:
+    def __init__(self, x_data, y_data):
+        self.x_data = x_data
+        self.y_data = y_data
+
+    def interpolate(self, x):
+        n = len(self.x_data)
+        result = 0
+        for i in range(n):
+            term = self.y_data[i]
+            for j in range(n):
+                if j != i:
+                    term *= (x - self.x_data[j]) / (self.x_data[i] - self.x_data[j])
+            result += term
+        return result
+
+#class interpolasi newton
+class InterpolasiNewton:
+    def __init__(self, x_data, y_data):
+        self.x_data = x_data
+        self.y_data = y_data
+        self.div_diff = self.divided_diff()
+
+    def divided_diff(self):
+        n = len(self.x_data)
+        div_diff_table = np.zeros([n, n])
+        div_diff_table[:, 0] = self.y_data
+
+        for j in range(1, n):
+            for i in range(n - j):
+                div_diff_table[i][j] = (div_diff_table[i + 1][j - 1] - div_diff_table[i][j - 1]) / (self.x_data[i + j] - self.x_data[i])
+
+        return div_diff_table[0, :]
+
+    def interpolate(self, x):
+        n = len(self.x_data)
+        result = self.div_diff[0]
+        for i in range(1, n):
+            term = self.div_diff[i]
+            for j in range(i):
+                term *= (x - self.x_data[j])
+            result += term
+        return result
+
+# Pengujian Data points
+Tegangan = np.array([5, 10, 15, 20, 25, 30, 35, 40])
+Waktu_Patah = np.array([40, 30, 25, 40, 18, 20, 22, 15])
+
+# Mencoba Interpolasi Lagrange dan Newton
+x_test = np.linspace(5, 40)
+lagrange = InterpolasiLagrange(Tegangan, Waktu_Patah)
+newton = InterpolasiNewton(Tegangan, Waktu_Patah)
+
+# figure dan axes
+fig, axs = plt.subplots(2)
+
+# Plot Interpolasi Lagrange
+y_test_lagrange = [lagrange.interpolate(xi) for xi in x_test]
+axs[0].plot(Tegangan, Waktu_Patah, 'ro', label='Data points')
+axs[0].plot(x_test, y_test_lagrange, label='Interpolasi Lagrange')
+axs[0].set_xlabel('Tegangan (kg/mm^2)')
+axs[0].set_ylabel('Waktu Patah (jam)')
+axs[0].legend()
+axs[0].set_title('Interpolasi Lagrange')
+
+# Plot Interpolasi Newton
+y_test_newton = [newton.interpolate(xi) for xi in x_test]
+axs[1].plot(Tegangan, Waktu_Patah, 'ro', label='Data points')
+axs[1].plot(x_test, y_test_newton, label='Interpolasi Newton')
+axs[1].set_xlabel('Tegangan (kg/mm^2)')
+axs[1].set_ylabel('Waktu Patah (jam)')
+axs[1].legend()
+axs[1].set_title('Interpolasi Newton')
+
+# Hasil Menampilkan plot
+plt.tight_layout()
+plt.show()
